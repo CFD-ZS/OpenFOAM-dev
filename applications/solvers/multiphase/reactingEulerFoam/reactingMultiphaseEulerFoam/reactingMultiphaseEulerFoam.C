@@ -35,7 +35,7 @@ Description
 
 #include "fvCFD.H"
 #include "multiphaseSystem.H"
-#include "phaseCompressibleTurbulenceModel.H"
+#include "phaseCompressibleMomentumTransportModel.H"
 #include "pimpleControl.H"
 #include "localEulerDdtScheme.H"
 #include "fvcSmooth.H"
@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
         {
             fluid.solve(rAUs, rAUfs);
             fluid.correct();
+            fluid.correctContinuityError();
 
             #include "YEqns.H"
 

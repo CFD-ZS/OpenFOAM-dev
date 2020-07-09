@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2015-2019 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,7 +45,8 @@ SourceFiles
 #define MovingPhaseModel_H
 
 #include "phaseModel.H"
-#include "phaseCompressibleTurbulenceModel.H"
+#include "phaseCompressibleMomentumTransportModel.H"
+#include "PhaseThermophysicalTransportModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -87,13 +88,20 @@ protected:
         tmp<volScalarField> divU_;
 
         //- Turbulence model
-        autoPtr<phaseCompressibleTurbulenceModel> turbulence_;
+        autoPtr<phaseCompressibleMomentumTransportModel> turbulence_;
 
-        //- Continuity error due to the flow
-        volScalarField continuityErrorFlow_;
+        //- Thermophysical transport model
+        autoPtr
+        <
+            PhaseThermophysicalTransportModel
+            <
+                phaseCompressibleMomentumTransportModel,
+                typename BasePhaseModel::thermoModel
+            >
+        > thermophysicalTransport_;
 
-        //- Continuity error due to any sources
-        volScalarField continuityErrorSources_;
+        //- Continuity error
+        volScalarField continuityError_;
 
         //- Kinetic Energy
         mutable tmp<volScalarField> K_;
@@ -105,9 +113,6 @@ private:
 
         //- Calculate and return the flux field
         tmp<surfaceScalarField> phi(const volVectorField& U) const;
-
-        //- Correct the continuity errors
-        void correctContinuityErrors();
 
 
 public:
@@ -131,11 +136,11 @@ public:
         //- Correct the phase properties other than the thermo and turbulence
         virtual void correct();
 
+        //- Correct the continuity error
+        virtual void correctContinuityError(const volScalarField& source);
+
         //- Correct the kinematics
         virtual void correctKinematics();
-
-        //- Correct the thermodynamics
-        virtual void correctThermo();
 
         //- Correct the turbulence
         virtual void correctTurbulence();
@@ -188,12 +193,6 @@ public:
             //- Return the continuity error
             virtual tmp<volScalarField> continuityError() const;
 
-            //- Return the continuity error due to the flow field
-            virtual tmp<volScalarField> continuityErrorFlow() const;
-
-            //- Return the continuity error due to any sources
-            virtual tmp<volScalarField> continuityErrorSources() const;
-
             //- Return the phase kinetic energy
             virtual tmp<volScalarField> K() const;
 
@@ -207,38 +206,10 @@ public:
             virtual void divU(tmp<volScalarField> divU);
 
 
-        // Turbulence
-
-            //- Return the turbulent dynamic viscosity
-            virtual tmp<volScalarField> mut() const;
-
-            //- Return the effective dynamic viscosity
-            virtual tmp<volScalarField> muEff() const;
-
-            //- Return the turbulent kinematic viscosity
-            virtual tmp<volScalarField> nut() const;
-
-            //- Return the effective kinematic viscosity
-            virtual tmp<volScalarField> nuEff() const;
-
-            //- Effective thermal turbulent diffusivity for temperature
-            //  of mixture for patch [W/m/K]
-            using BasePhaseModel::kappaEff;
-
-            //- Return the effective thermal conductivity
-            virtual tmp<volScalarField> kappaEff() const;
+        // Momentum transport
 
             //- Return the effective thermal conductivity on a patch
             virtual tmp<scalarField> kappaEff(const label patchi) const;
-
-            //- Effective thermal turbulent diffusivity of mixture [kg/m/s]
-            using BasePhaseModel::alphaEff;
-
-            //- Return the effective thermal diffusivity
-            virtual tmp<volScalarField> alphaEff() const;
-
-            //- Return the effective thermal conductivity on a patch
-            virtual tmp<scalarField> alphaEff(const label patchi) const;
 
             //- Return the turbulent kinetic energy
             virtual tmp<volScalarField> k() const;
@@ -246,6 +217,16 @@ public:
             //- Return the phase-pressure'
             //  (derivative of phase-pressure w.r.t. phase-fraction)
             virtual tmp<volScalarField> pPrime() const;
+
+
+        // Thermophysical transport
+
+            //- Return the source term for the energy equation
+            virtual tmp<fvScalarMatrix> divq(volScalarField& he) const;
+
+            //- Return the source term for the given specie mass-fraction
+            //  equation
+            virtual tmp<fvScalarMatrix> divj(volScalarField& Yi) const;
 };
 
 

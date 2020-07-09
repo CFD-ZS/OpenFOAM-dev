@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2013-2019 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -164,6 +164,31 @@ public:
                 const label patchi
             ) const;
 
+            //- Sensible enthalpy [J/kg]
+            virtual tmp<volScalarField> hs() const;
+
+            //- Sensible enthalpy
+            //  for given pressure and temperature [J/kg]
+            virtual tmp<volScalarField> hs
+            (
+                const volScalarField& p,
+                const volScalarField& T
+            ) const;
+
+            //- Sensible enthalpy for cell-set [J/kg]
+            virtual tmp<scalarField> hs
+            (
+                const scalarField& T,
+                const labelList& cells
+            ) const;
+
+            //- Sensible enthalpy for patch [J/kg]
+            virtual tmp<scalarField> hs
+            (
+                const scalarField& T,
+                const label patchi
+            ) const;
+
             //- Absolute enthalpy [J/kg]
             virtual tmp<volScalarField> ha() const;
 
@@ -189,7 +214,7 @@ public:
                 const label patchi
             ) const;
 
-            //- Chemical enthalpy [J/kg]
+            //- Enthalpy of formation [J/kg]
             virtual tmp<volScalarField> hc() const;
 
             //- Temperature from enthalpy/internal energy for cell-set

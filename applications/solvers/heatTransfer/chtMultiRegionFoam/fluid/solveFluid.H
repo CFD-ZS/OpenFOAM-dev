@@ -16,12 +16,13 @@ else
     // --- PISO loop
     while (pimple.correct())
     {
-        #include "pEqn.H"
+        #include "../../buoyantPimpleFoam/pEqn.H"
     }
 
     if (pimples.pimpleTurbCorr(i))
     {
         turbulence.correct();
+        thermophysicalTransport.correct();
     }
 
     if (!mesh.steady() && pimples.finalPimpleIter())

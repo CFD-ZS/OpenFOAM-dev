@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -117,13 +117,7 @@ Foam::AnisothermalPhaseModel<BasePhaseModel>::heEqn()
 
       + fvc::ddt(alpha, this->rho(), K) + fvc::div(alphaRhoPhi, K)
       - contErr*K
-
-      - fvm::laplacian
-        (
-            fvc::interpolate(alpha)
-           *fvc::interpolate(this->alphaEff()),
-            he
-        )
+      + this->divq(he)
      ==
         alpha*this->Qdot()
     );
@@ -134,7 +128,7 @@ Foam::AnisothermalPhaseModel<BasePhaseModel>::heEqn()
         tEEqn.ref() += filterPressureWork
         (
             fvc::div(fvc::absolute(alphaPhi, alpha, U), this->thermo().p())
-          + this->thermo().p()*fvc::ddt(alpha)
+          + (fvc::ddt(alpha) - contErr/this->rho())*this->thermo().p()
         );
     }
     else if (this->thermo_->dpdt())

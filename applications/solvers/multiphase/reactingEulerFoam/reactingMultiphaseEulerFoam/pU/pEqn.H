@@ -151,22 +151,20 @@ while (pimple.correct())
     fluid.fillFields("HbyA", dimVelocity, HbyAs);
     fluid.fillFields("phiHbyA", dimForce/dimDensity/dimVelocity, phiHbyAs);
 
-    // Add explicit drag forces and fluxes if not doing partial elimination
-    if (!partialElimination)
-    {
-        PtrList<volVectorField> KdUByAs(fluid.KdUByAs(rAUs));
-        PtrList<surfaceScalarField> phiKdPhis(fluid.phiKdPhis(rAUs));
+    // Add explicit drag forces and fluxes
+    PtrList<volVectorField> KdUByAs(fluid.KdUByAs(rAUs));
+    PtrList<surfaceScalarField> phiKdPhis(fluid.phiKdPhis(rAUs));
 
-        forAll(phases, phasei)
+    forAll(phases, phasei)
+    {
+        if (KdUByAs.set(phasei))
         {
-            if (KdUByAs.set(phasei))
-            {
-                HbyAs[phasei] -= KdUByAs[phasei];
-            }
-            if (phiKdPhis.set(phasei))
-            {
-                phiHbyAs[phasei] -= phiKdPhis[phasei];
-            }
+            HbyAs[phasei] -= KdUByAs[phasei];
+        }
+
+        if (phiKdPhis.set(phasei))
+        {
+            phiHbyAs[phasei] -= phiKdPhis[phasei];
         }
     }
 
@@ -188,20 +186,6 @@ while (pimple.correct())
     forAll(phases, phasei)
     {
         phiHbyA += alphafs[phasei]*phiHbyAs[phasei];
-    }
-
-    // Add explicit drag fluxes if doing partial elimination
-    if (partialElimination)
-    {
-        PtrList<surfaceScalarField> phiKdPhis(fluid.phiKdPhis(rAUs));
-
-        forAll(phases, phasei)
-        {
-            if (phiKdPhis.set(phasei))
-            {
-                phiHbyA -= alphafs[phasei]*phiKdPhis[phasei];
-            }
-        }
     }
 
     MRF.makeRelative(phiHbyA);
@@ -382,7 +366,15 @@ while (pimple.correct())
 
             if (partialElimination)
             {
-                fluid.partialElimination(rAUs);
+                fluid.partialElimination(rAUs, KdUByAs, alphafs, phiKdPhis);
+            }
+            else
+            {
+                forAll(fluid.movingPhases(), movingPhasei)
+                {
+                    phaseModel& phase = fluid.movingPhases()[movingPhasei];
+                    MRF.makeRelative(phase.phiRef());
+                }
             }
 
             forAll(fluid.movingPhases(), movingPhasei)

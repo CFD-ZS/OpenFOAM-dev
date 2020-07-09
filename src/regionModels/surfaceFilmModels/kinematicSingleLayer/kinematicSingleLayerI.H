@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,13 +80,13 @@ inline const volVectorField& kinematicSingleLayer::U() const
 }
 
 
-inline const volVectorField& kinematicSingleLayer::Us() const
+inline const volVectorField::Internal& kinematicSingleLayer::Us() const
 {
     return Us_;
 }
 
 
-inline const volVectorField& kinematicSingleLayer::Uw() const
+inline const volVectorField::Internal& kinematicSingleLayer::Uw() const
 {
     return Uw_;
 }
@@ -213,7 +213,8 @@ inline transferModelList& kinematicSingleLayer::transfer()
 }
 
 
-inline const filmTurbulenceModel& kinematicSingleLayer::turbulence() const
+inline const filmMomentumTransportModel&
+kinematicSingleLayer::turbulence() const
 {
     return turbulence_();
 }

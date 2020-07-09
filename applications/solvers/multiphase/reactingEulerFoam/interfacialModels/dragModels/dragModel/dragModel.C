@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,7 @@ License
 
 #include "dragModel.H"
 #include "phasePair.H"
-#include "swarmCorrection.H"
+#include "noSwarm.H"
 #include "surfaceInterpolate.H"
 #include "BlendedInterfacialModel.H"
 
@@ -87,11 +87,13 @@ Foam::dragModel::dragModel
     pair_(pair),
     swarmCorrection_
     (
-        swarmCorrection::New
+        dict.found("swarmCorrection")
+      ? swarmCorrection::New
         (
             dict.subDict("swarmCorrection"),
             pair
         )
+      : autoPtr<swarmCorrection>(new swarmCorrections::noSwarm(dict, pair))
     )
 {}
 
@@ -111,7 +113,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModel::Ki() const
        *CdRe()
        *swarmCorrection_->Cs()
        *pair_.continuous().rho()
-       *pair_.continuous().nu()
+       *pair_.continuous().thermo().nu()
        /sqr(pair_.dispersed().d());
 }
 

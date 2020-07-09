@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2019 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2019-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,6 +27,7 @@ License
 #include "sinteringModel.H"
 #include "fvmDdt.H"
 #include "fvmDiv.H"
+#include "fvcDiv.H"
 #include "fvmSup.H"
 #include "fvcSup.H"
 #include "fvcDdt.H"
@@ -194,8 +195,8 @@ void Foam::diameterModels::shapeModels::fractal::correct()
 {
     const sizeGroup& fi = sizeGroup_;
     const phaseModel& phase = fi.phase();
-    const volScalarField& alpha = fi.phase();
-    const volScalarField& rho = fi.phase().thermo().rho();
+    const volScalarField& alpha = phase;
+    const volScalarField& rho = phase.thermo().rho();
 
     const populationBalanceModel& popBal =
         sizeGroup_.mesh().lookupObject<populationBalanceModel>
@@ -214,10 +215,13 @@ void Foam::diameterModels::shapeModels::fractal::correct()
         fvc::ddt(alpha, rho, fi)*kappa_.oldTime()
       + alpha*rho*fi*fvm::ddt(kappa_)
       + fvm::div(fAlphaRhoPhi, kappa_)
-      + fvm::SuSp(- phase.continuityErrorFlow()*fi, kappa_)
       + fvm::SuSp
         (
-            fi.VelocityGroup().dmdt()*fi,
+            fi
+           *(
+                fi.VelocityGroup().dmdt()
+              - (fvc::ddt(alpha, rho) + fvc::div(phase.alphaRhoPhi()))
+            ),
             kappa_
         )
       ==

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2015-2019 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -220,32 +220,6 @@ Foam::StationaryPhaseModel<BasePhaseModel>::continuityError() const
 
 template<class BasePhaseModel>
 Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::continuityErrorFlow() const
-{
-    return volScalarField::New
-    (
-        IOobject::groupName("continuityErrorFlow", this->name()),
-        this->mesh(),
-        dimensionedScalar(dimDensity/dimTime, 0)
-    );
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::continuityErrorSources() const
-{
-    return volScalarField::New
-    (
-        IOobject::groupName("continuityErrorSources", this->name()),
-        this->mesh(),
-        dimensionedScalar(dimDensity/dimTime, 0)
-    );
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
 Foam::StationaryPhaseModel<BasePhaseModel>::K() const
 {
     return volScalarField::New
@@ -278,76 +252,10 @@ void Foam::StationaryPhaseModel<BasePhaseModel>::divU
 
 
 template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::mut() const
-{
-    return volScalarField::New
-    (
-        IOobject::groupName("mut", this->name()),
-        this->mesh(),
-        dimensionedScalar(dimDynamicViscosity, 0)
-    );
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::muEff() const
-{
-    return this->thermo().mu();
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::nut() const
-{
-    return volScalarField::New
-    (
-        IOobject::groupName("nut", this->name()),
-        this->mesh(),
-        dimensionedScalar(dimViscosity, 0)
-    );
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::nuEff() const
-{
-    return this->thermo().nu();
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::kappaEff() const
-{
-    return this->thermo().kappa();
-}
-
-
-template<class BasePhaseModel>
 Foam::tmp<Foam::scalarField>
 Foam::StationaryPhaseModel<BasePhaseModel>::kappaEff(const label patchi) const
 {
     return this->thermo().kappa(patchi);
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::volScalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::alphaEff() const
-{
-    return this->thermo().alpha();
-}
-
-
-template<class BasePhaseModel>
-Foam::tmp<Foam::scalarField>
-Foam::StationaryPhaseModel<BasePhaseModel>::alphaEff(const label patchi) const
-{
-    return this->thermo().alpha(patchi);
 }
 
 
@@ -373,6 +281,20 @@ Foam::StationaryPhaseModel<BasePhaseModel>::pPrime() const
         IOobject::groupName("pPrime", this->name()),
         this->mesh(),
         dimensionedScalar(dimPressure, 0)
+    );
+}
+
+
+template<class BasePhaseModel>
+Foam::tmp<Foam::fvScalarMatrix>
+Foam::StationaryPhaseModel<BasePhaseModel>::divq(volScalarField& he) const
+{
+    const volScalarField& alpha = *this;
+
+    return -fvm::laplacian
+    (
+        fvc::interpolate(alpha)*fvc::interpolate(this->thermo().alpha()),
+        he
     );
 }
 

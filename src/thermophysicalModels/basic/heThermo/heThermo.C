@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -298,6 +298,79 @@ Foam::tmp<Foam::scalarField> Foam::heThermo<BasicThermo, MixtureType>::he
 
 template<class BasicThermo, class MixtureType>
 Foam::tmp<Foam::volScalarField>
+Foam::heThermo<BasicThermo, MixtureType>::hs() const
+{
+    return volScalarFieldProperty
+    (
+        "hs",
+        dimEnergy/dimMass,
+        &MixtureType::cellMixture,
+        &MixtureType::patchFaceMixture,
+        &MixtureType::thermoType::Hs,
+        this->p(),
+        this->T_
+    );
+}
+
+
+template<class BasicThermo, class MixtureType>
+Foam::tmp<Foam::volScalarField> Foam::heThermo<BasicThermo, MixtureType>::hs
+(
+    const volScalarField& p,
+    const volScalarField& T
+) const
+{
+    return volScalarFieldProperty
+    (
+        "hs",
+        dimEnergy/dimMass,
+        &MixtureType::cellMixture,
+        &MixtureType::patchFaceMixture,
+        &MixtureType::thermoType::Hs,
+        p,
+        T
+    );
+}
+
+
+template<class BasicThermo, class MixtureType>
+Foam::tmp<Foam::scalarField> Foam::heThermo<BasicThermo, MixtureType>::hs
+(
+    const scalarField& T,
+    const labelList& cells
+) const
+{
+    return cellSetProperty
+    (
+        &MixtureType::cellMixture,
+        &MixtureType::thermoType::Hs,
+        cells,
+        UIndirectList<scalar>(this->p(), cells),
+        T
+    );
+}
+
+
+template<class BasicThermo, class MixtureType>
+Foam::tmp<Foam::scalarField> Foam::heThermo<BasicThermo, MixtureType>::hs
+(
+    const scalarField& T,
+    const label patchi
+) const
+{
+    return patchFieldProperty
+    (
+        &MixtureType::patchFaceMixture,
+        &MixtureType::thermoType::Hs,
+        patchi,
+        this->p().boundaryField()[patchi],
+        T
+    );
+}
+
+
+template<class BasicThermo, class MixtureType>
+Foam::tmp<Foam::volScalarField>
 Foam::heThermo<BasicThermo, MixtureType>::ha() const
 {
     return volScalarFieldProperty
@@ -379,7 +452,7 @@ Foam::heThermo<BasicThermo, MixtureType>::hc() const
         dimEnergy/dimMass,
         &MixtureType::cellMixture,
         &MixtureType::patchFaceMixture,
-        &MixtureType::thermoType::Hc
+        &MixtureType::thermoType::Hf
     );
 }
 
